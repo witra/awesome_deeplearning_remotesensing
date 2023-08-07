@@ -1,0 +1,8 @@
+RapidAI4EO:
+  geometries_file_url: "https://radiantearth.blob.core.windows.net/mlhub/rapidai4eo/resources/rapidai4eo_geometries.geojson.gz"
+  labels_file_url : "https://radiantearth.blob.core.windows.net/mlhub/rapidai4eo/resources/rapidai4eo_labels.csv.gz"
+  labels_mapping_file_url: "https://radiantearth.blob.core.windows.net/mlhub/rapidai4eo/resources/rapidai4eo_label_mappings.csv"
+
+  geometries_filename: "rapidai4eo_geometries.geojson.gz"
+  labels_filename: "rapidai4eo_labels.csv.gz"
+  labels_mapping_filename: "rapidai4eo_label_mappings.csv"
