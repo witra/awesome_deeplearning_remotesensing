@@ -4,58 +4,21 @@ import os.path
 import hydra
 import gzip
 import geopandas as gpd
+import pandas as pd
+
+from typing import Tuple, Union
+from src.data.acquire_data import AcquireData
 from src.data.rapidai4eo import get_asset_hrefs
 from src import utils
-
-
-class AcquireData:
-    """
-    This class is intended to acquire satellite data from various sources.
-
-    the final return is list of links of href
-    """
-
-    def __init__(self, geometry, date_range):
-        """
-
-        Parameters
-        ----------
-        geometry : default location to acquire the data
-        date_range : default time to acquire the data
-
-        Returns
-        -------
-
-        """
-        self.geometry = geometry
-        self.time_range = date_range
-
-    def overwrite_loc_time(self, geometry, date_range):
-        """
-        This method define geometry that will use either default or new one
-        Parameters
-        ----------
-        geometry :
-        date_range :
-
-        Returns
-        -------
-
-        """
-        if geometry is None:
-            geometry = self.geometry
-        if date_range is None:
-            date_range = self.time_range
-        return geometry, date_range
-
+from shapely.geometry import Point, Polygon
 
 class RapidAI4EO(AcquireData):
-    def __init__(self, geometry, date_range, **kwargs):
+    def __init__(self, geometry: Union[Point, Polygon], date_range: Tuple[pd.Timestamp, pd.Timestamp], **kwargs):
         """
         This class aims to acquire the dataset from rapdAI4EO repository
         Parameters
         ----------
-        geometry :
+        geometry (Point or Polygon) :
         time_range (pd.Timestamp) : tuple of start-end date. Have to follow the structure: YYYY-MM-DDT00:00:00Z
         kwargs :
         """
@@ -170,7 +133,7 @@ class RapidAI4EO(AcquireData):
         spatially_filtered_ids = geometries[geometries.geometry.intersects(self.geometry)].index
         hrefs = get_asset_hrefs(spatially_filtered_ids,
                                 products=products,
-                                temporal_filter=self.time_range)
+                                temporal_filter=self.date_range)
         print(f'obtained {len(hrefs)} images for {products}')
         return hrefs
 
