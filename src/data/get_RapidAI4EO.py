@@ -13,14 +13,13 @@ from src import utils
 from shapely.geometry import Point, Polygon
 
 class RapidAI4EO(AcquireData):
-    def __init__(self, geometry: Union[Point, Polygon], date_range: Tuple[pd.Timestamp, pd.Timestamp], **kwargs):
+    def __init__(self, geometry: Union[Point, Polygon], date_range: Tuple[pd.Timestamp, pd.Timestamp]):
         """
         This class aims to acquire the dataset from rapdAI4EO repository
         Parameters
         ----------
         geometry (Point or Polygon) :
         time_range (pd.Timestamp) : tuple of start-end date. Have to follow the structure: YYYY-MM-DDT00:00:00Z
-        kwargs :
         """
         super().__init__(geometry, date_range)
 
@@ -112,13 +111,15 @@ class RapidAI4EO(AcquireData):
             geometries = gpd.read_file(f).set_index("sample_id")
         return geometries
 
-    def filter_hrefs(self, geometries, filter_type=None, products=None):
+    def filter_hrefs_on_geom(self, geometries, products=None):
         """
-        This function filters the hrefs eiter based on location or labels (currently still location)
-        Parameters
+        This function filters the hrefs eiter based on location
         ----------
         geometries (GeoDataFrame): Gpd of downloaded geometries from Planet
         products (list) : by default ['pfsr', 'pfqa', 's2']
+                        pfsr = planet data
+                        pfag = mask
+                        s2 = sentinel
         filter_type (str) : filtered  by location or label,
 
         Returns; List of hrefs
@@ -129,7 +130,6 @@ class RapidAI4EO(AcquireData):
         if products is None:
             products = ['pfsr', 'pfqa', 's2']
 
-        # geometries = self.load_geometries()
         spatially_filtered_ids = geometries[geometries.geometry.intersects(self.geometry)].index
         hrefs = get_asset_hrefs(spatially_filtered_ids,
                                 products=products,
