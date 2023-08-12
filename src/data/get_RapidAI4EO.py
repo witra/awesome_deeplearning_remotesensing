@@ -5,8 +5,13 @@ import hydra
 import gzip
 import geopandas as gpd
 import pandas as pd
+import torchdata
+import torch
+import xarray as xr
+import zen3geo
 
-from typing import Tuple, Union
+
+from typing import Tuple, Union, List
 from src.data.acquire_data import AcquireData
 from src.data.rapidai4eo import get_asset_hrefs
 from src import utils
@@ -27,6 +32,8 @@ class RapidAI4EO(AcquireData):
         hydra.initialize(version_base="1.1", config_path="../../config", job_name="RapidAI4EO")
         cfg = hydra.compose(config_name="conf_dataSrc.yaml")
 
+        # cfg.clear()
+
         self.geometries_file_url = cfg.RapidAI4EO.geometries_file_url
         self.labels_file_url = cfg.RapidAI4EO.labels_file_url
         self.labels_mapping_file_url = cfg.RapidAI4EO.labels_mapping_file_url
@@ -34,6 +41,8 @@ class RapidAI4EO(AcquireData):
         self.geometries_filename = cfg.RapidAI4EO.geometries_filename
         self.labels_filename = cfg.RapidAI4EO.labels_filename
         self.labels_mapping_filename = cfg.RapidAI4EO.labels_mapping_filename
+        hydra.core.global_hydra.GlobalHydra.instance().clear()
+
 
     def get_geometries(self, path=None):
         """
@@ -52,9 +61,10 @@ class RapidAI4EO(AcquireData):
             self.geometries_filename = path
 
         if not os.path.exists(path):
-            utils.download_file(self.geometries_file_url, path)
+            return utils.download_file(self.geometries_file_url, path)
         else:
             print(f'{self.geometries_file_url} is already downloaded to {path}')
+        return self.geometries_filename
 
     def get_labels(self, path=None):
         """
@@ -73,10 +83,10 @@ class RapidAI4EO(AcquireData):
             self.labels_filename = path
 
         if not os.path.exists(path):
-            utils.download_file(self.labels_file_url, path)
+            return utils.download_file(self.labels_file_url, path)
         else:
             print(f'{self.labels_file_url} is already downloaded to {path}')
-
+        return self.labels_filename
     def get_labels_mapping(self, path=None):
         """
 
@@ -94,9 +104,10 @@ class RapidAI4EO(AcquireData):
             self.labels_mapping_filename = path
 
         if not os.path.exists(path):
-            utils.download_file(self.labels_mapping_file_url, path)
+            return utils.download_file(self.labels_mapping_file_url, path)
         else:
             print(f'{self.labels_mapping_file_url} is already downloaded to {path}')
+        return self.labels_mapping_filename
 
     def load_geometries(self):
         """
@@ -136,6 +147,52 @@ class RapidAI4EO(AcquireData):
                                 temporal_filter=self.date_range)
         print(f'obtained {len(hrefs)} images for {products}')
         return hrefs
+
+    def datapipe_img_only(self,
+                          img_hrefs: List,
+                          input_dims=None,
+                          input_overlap=None,
+                          batch_size = 16) -> torch.utils.data.datapipes.iter.callable.CollatorIterDataPipe:
+        """
+        Build a basic datapipe for image only.
+        Parameters
+        ----------
+        img_hrefs (list) : list of hrefs
+        input_dims: x and y sizes
+        input_overlap : default is 0 for x and y dims (there is no overlap, stride = input dims)
+
+        Returns: datapipe
+        -------
+
+        """
+        if input_overlap is None:
+            input_overlap = {'y': 0, 'x': 0}
+        if input_dims is None:
+            input_dims = {'y': 128, 'x': 128}
+
+        def imageset_to_tensor(chip_samples: xr.DataArray) -> (list[torch.Tensor]):
+            """
+            Coverts the xr.DataArray of satellite image to tensor
+            Parameters
+            ----------
+            samples :
+
+            Returns
+            -------
+
+            """
+            img_tensor = [torch.as_tensor(chip_sample.data) for chip_sample in chip_samples]
+            img_tensor = torch.stack(tensors=img_tensor)
+            return img_tensor
+        dp = torchdata.datapipes.iter.IterableWrapper(iterable=img_hrefs)
+        dp = dp.read_from_rioxarray()
+        dp = dp.slice_with_xbatcher(input_dims=input_dims, input_overlap=input_overlap)
+        dp = dp.batch(batch_size=batch_size)
+        dp = dp.collate(collate_fn=imageset_to_tensor)
+        return dp
+
+    def show_graph(self, dp):
+        torchdata.datapipes.utils.to_graph(dp=dp)
 
 
 
