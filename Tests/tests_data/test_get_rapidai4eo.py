@@ -31,8 +31,8 @@ def fixture_RapidAI4EO_data2():
 @pytest.fixture(scope='class', name='geom_RapidAI4EO_data2')
 def fixture_geom_RapidAI4EO_data2(RapidAI4EO_data2):
     directory = "../data_test/"
-    if not os.path.exists(directory):
-        os.mkdir(directory)
+    # if not os.path.exists(directory):
+    #     os.mkdir(directory)
     RapidAI4EO_data2.get_geometries(path=f"{directory}rapidai4eo_geometries.geojson.gz")
     return RapidAI4EO_data2.load_geometries()
 
