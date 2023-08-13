@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import shapely.geometry
 import pytest
@@ -28,7 +30,10 @@ def fixture_RapidAI4EO_data2():
 
 @pytest.fixture(scope='class', name='geom_RapidAI4EO_data2')
 def fixture_geom_RapidAI4EO_data2(RapidAI4EO_data2):
-    RapidAI4EO_data2.get_geometries(path="../data_test/rapidai4eo_geometries.geojson.gz")
+    directory = "../data_test/"
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+    RapidAI4EO_data2.get_geometries(path=f"{directory}rapidai4eo_geometries.geojson.gz")
     return RapidAI4EO_data2.load_geometries()
 
 def test_RapidAI4EO(RapidAI4EO_data1, RapidAI4EO_data2):
@@ -77,7 +82,10 @@ def test_get_labels(RapidAI4EO_data1, mocker):
 
 
 def test_load_geometries(RapidAI4EO_data1):
-    RapidAI4EO_data1.get_geometries(path="../data_test/rapidai4eo_geometries.geojson.gz")
+    directory = "../data_test/"
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+    RapidAI4EO_data1.get_geometries(path=f"{directory}rapidai4eo_geometries.geojson.gz")
     geometries = RapidAI4EO_data1.load_geometries()
     assert isinstance(geometries, gpd.geodataframe.GeoDataFrame)
 
