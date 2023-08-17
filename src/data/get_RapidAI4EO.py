@@ -10,12 +10,12 @@ import torch
 import xarray as xr
 import zen3geo
 
-
 from typing import Tuple, Union, List
 from src.data.acquire_data import AcquireData
 from src.data.rapidai4eo import get_asset_hrefs
 from src import utils
 from shapely.geometry import Point, Polygon
+
 
 class RapidAI4EO(AcquireData):
     def __init__(self, geometry: Union[Point, Polygon], date_range: Tuple[pd.Timestamp, pd.Timestamp]):
@@ -42,7 +42,6 @@ class RapidAI4EO(AcquireData):
         self.labels_filename = cfg.RapidAI4EO.labels_filename
         self.labels_mapping_filename = cfg.RapidAI4EO.labels_mapping_filename
         hydra.core.global_hydra.GlobalHydra.instance().clear()
-
 
     def get_geometries(self, path=None):
         """
@@ -87,6 +86,7 @@ class RapidAI4EO(AcquireData):
         else:
             print(f'{self.labels_file_url} is already downloaded to {path}')
         return self.labels_filename
+
     def get_labels_mapping(self, path=None):
         """
 
@@ -148,11 +148,11 @@ class RapidAI4EO(AcquireData):
         print(f'obtained {len(hrefs)} images for {products}')
         return hrefs
 
-    def datapipe_img_only(self,
-                          img_hrefs: List,
+    @staticmethod
+    def datapipe_img_only(img_hrefs: List,
                           input_dims=None,
                           input_overlap=None,
-                          batch_size = 16) -> torch.utils.data.datapipes.iter.callable.CollatorIterDataPipe:
+                          batch_size=16) -> torch.utils.data.datapipes.iter.callable.CollatorIterDataPipe:
         """
         Build a basic datapipe for image only.
         Parameters
@@ -160,7 +160,7 @@ class RapidAI4EO(AcquireData):
         img_hrefs (list) : list of hrefs
         input_dims: x and y sizes
         input_overlap : default is 0 for x and y dims (there is no overlap, stride = input dims)
-
+        batch_size (int): batch size
         Returns: datapipe
         -------
 
@@ -184,6 +184,7 @@ class RapidAI4EO(AcquireData):
             img_tensor = [torch.as_tensor(chip_sample.data) for chip_sample in chip_samples]
             img_tensor = torch.stack(tensors=img_tensor)
             return img_tensor
+
         dp = torchdata.datapipes.iter.IterableWrapper(iterable=img_hrefs)
         dp = dp.read_from_rioxarray()
         dp = dp.slice_with_xbatcher(input_dims=input_dims, input_overlap=input_overlap)
@@ -191,8 +192,88 @@ class RapidAI4EO(AcquireData):
         dp = dp.collate(collate_fn=imageset_to_tensor)
         return dp
 
-    def show_graph(self, dp):
-        torchdata.datapipes.utils.to_graph(dp=dp)
+    @staticmethod
+    def datapipe_img_with_label(img_hrefs: List,
+                                label_hrefs: List,
+                                input_dims: dict = None,
+                                input_overlap: dict = None,
+                                batch_size=10) -> torch.utils.data.datapipes.iter.callable.CollatorIterDataPipe:
+        """
 
+        Parameters
+        ----------
+        img_hrefs :
+        label_hrefs :
+        input_dims :
+        input_overlap :
 
+        Returns
+        -------
 
+        """
+        if input_overlap is None:
+            input_overlap = {'y': 50, 'x': 50}
+        if input_dims is None:
+            input_dims = {'y': 100, 'x': 100}
+
+        def xr_da_to_ds(img_and_label: tuple) -> xr.Dataset:
+            """
+            Pack the images and labels into xr.Dataset
+            Parameters
+            ----------
+            img_and_label :
+
+            Returns
+            -------
+
+            """
+
+            img, mask = img_and_label
+            dataset: xr.Dataset = xr.merge([img.rename('img'), mask.isel(band=0).rename('mask')],
+                                           join='override')  # arbitrary select band 0 mask
+            return dataset
+
+        def dataset_to_tensor(chip_samples: xr.Dataset) -> (list[torch.Tensor], list[torch.Tensor]):
+            """
+            Coverts the xr.Dataset of satellite image and its label to tensor
+            Parameters
+            ----------
+            samples :
+
+            Returns
+            -------
+
+            """
+            img_tensor: list[torch.Tensor] = [torch.as_tensor(chip.img.data) for chip in chip_samples]
+            label_tensor: list[torch.Tensor] = [torch.as_tensor(chip.mask.data) for chip in chip_samples]
+
+            img_tensor = torch.stack(tensors=img_tensor)
+            label_tensor = torch.stack(tensors=label_tensor)
+            return img_tensor, label_tensor
+
+        # Init the pipelines
+        dp_planet = torchdata.datapipes.iter.IterableWrapper(iterable=img_hrefs)
+        dp_label = torchdata.datapipes.iter.IterableWrapper(iterable=label_hrefs)
+
+        # read the files
+        dp_planet = dp_planet.read_from_rioxarray()
+        dp_label = dp_label.read_from_rioxarray()
+
+        # zip two the data and the labels
+        dp = dp_planet.zip(dp_label)
+
+        # convert the zip into xr.Dataset using collate
+        dp = dp.map(fn=xr_da_to_ds)
+
+        # slice the image and mask
+        dp = dp.slice_with_xbatcher(input_dims=input_dims, input_overlap=input_overlap)
+
+        # take per batch
+        dp = dp.batch(batch_size=batch_size)
+
+        dp = dp.collate(collate_fn=dataset_to_tensor)
+        return dp
+
+    @staticmethod
+    def show_graph(dp):
+        return torchdata.datapipes.utils.to_graph(dp=dp)
