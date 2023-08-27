@@ -14,6 +14,7 @@ from typing import Tuple, Union, List
 from src.data.acquire_data import AcquireData
 from src.data.rapidai4eo import get_asset_hrefs
 from src import utils
+from src.data.custom_pipeline import rioxarray_dp
 from shapely.geometry import Point, Polygon
 
 
@@ -152,13 +153,14 @@ class RapidAI4EO(AcquireData):
     def datapipe_img_only(img_hrefs: List,
                           input_dims=None,
                           input_overlap=None,
-                          batch_size=16) -> torch.utils.data.datapipes.iter.callable.CollatorIterDataPipe:
+                          batch_size=16,
+                          select_bands=None) -> torch.utils.data.datapipes.iter.callable.CollatorIterDataPipe:
         """
         Build a basic datapipe for image only.
         Parameters
         ----------
         img_hrefs (list) : list of hrefs
-        input_dims: x and y sizes
+        input_dims: x and y sizes of the images
         input_overlap : default is 0 for x and y dims (there is no overlap, stride = input dims)
         batch_size (int): batch size
         Returns: datapipe
@@ -181,12 +183,14 @@ class RapidAI4EO(AcquireData):
             -------
 
             """
-            img_tensor = [torch.as_tensor(chip_sample.data) for chip_sample in chip_samples]
+            img_tensor = [torch.as_tensor(chip_sample.data, dtype=torch.float32) for chip_sample in chip_samples]
             img_tensor = torch.stack(tensors=img_tensor)
             return img_tensor
 
         dp = torchdata.datapipes.iter.IterableWrapper(iterable=img_hrefs)
         dp = dp.read_from_rioxarray()
+        if select_bands:
+            dp = dp.filter_rioxarray(label="band", selected_list=select_bands)
         dp = dp.slice_with_xbatcher(input_dims=input_dims, input_overlap=input_overlap)
         dp = dp.batch(batch_size=batch_size)
         dp = dp.collate(collate_fn=imageset_to_tensor)
@@ -199,7 +203,7 @@ class RapidAI4EO(AcquireData):
                                 input_overlap: dict = None,
                                 batch_size=10) -> torch.utils.data.datapipes.iter.callable.CollatorIterDataPipe:
         """
-
+        Build a basic datapipe pairing the images and its label.
         Parameters
         ----------
         img_hrefs :
