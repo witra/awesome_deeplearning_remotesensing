@@ -4,6 +4,7 @@ import pandas as pd
 from typing import Tuple, Union
 from shapely.geometry import Point, Polygon
 
+
 class AcquireData:
     """
     This class is intended to acquire satellite data from various sources.

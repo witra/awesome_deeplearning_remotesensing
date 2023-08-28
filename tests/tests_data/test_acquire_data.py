@@ -26,7 +26,8 @@ def fixture_acquire_data2():
     data = AcquireData(box, date_range)
     return data
 
-def test_data(acquire_data1, acquire_data2):
+
+def test_acquire_data(acquire_data1, acquire_data2):
     geom1 = acquire_data1.geometry
     geom2 = acquire_data2.geometry
 
@@ -44,6 +45,7 @@ def test_data(acquire_data1, acquire_data2):
     assert geom2 == geom2_true
     assert date_range1 == date_range_true
     assert date_range2 == date_range_true
+
 
 def test_overwrite_loc(acquire_data1):
     coords = ((13., 52.), (13., 53.), (14., 53.), (14., 52.), (13., 52.))

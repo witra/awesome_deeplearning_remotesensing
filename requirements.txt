@@ -4,6 +4,7 @@
 torch~=2.0.1
 torchdata~=0.6.1
 zen3geo~=0.6.2
+timm
 
 # local package
 -e .
