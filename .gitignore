@@ -1,4 +1,5 @@
 # self define
+keys
 practicing
 
 # Byte-compiled / optimized / DLL files
@@ -90,3 +91,4 @@ target/
 
 # Mypy cache
 .mypy_cache/
+/src/models/my_mae/wandb/
