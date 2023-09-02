@@ -1,7 +1,25 @@
 awesome_deepLearning_remoteSensing
 ==============================
 
-a project to apply my knowledge in  remote sensing and deep learning
+_**a project to apply my knowledge in  remote sensing and deep learning**_
+
+This repository is intended to accommodate my passion and learning process in advancing Earth Observation(EO) techniques 
+using Deep Learning.
+
+Currently, I am very interested with the **transfer learning**, **self-supervised learning**, and **foundation model**. It is driven by the special case
+of Earth Observation data that the mainstream computer vision treatment can not be straightly implemented to the Satellite 
+Image. For instance, satellite imagery could have more than 3 channels or even hundreds where each channel has correlation to certain Earth
+properties. On the other hand, Deep Learning has a big potential power to understand the earth objects with the current abundance satellite data.  
+
+Goals and what's currently going
+------------
+1. Implementing production standard of deep learning project. Some resources I follow to implement it are:
+   - [Developmentseed.org](https://developmentseed.org/blog/2022-09-27-ml-tooling). They talk about how they implement their GeoML project
+   - QuantumBlack, AI by McKinsey in the article about [production code](https://medium.com/quantumblack/data-scientists-the-only-useful-code-is-production-code-8b4806f2fe75)
+   - [fullstackdeeplearning.com](https://fullstackdeeplearning.com). Explaining how the DL project from end-to-end.
+2. Training, Testing, and Deploying the deepl learning model for Land Cover analysis.
+   - Currently I am trying to reproduce the [MAE](https://www.google.com/search?client=safari&rls=en&q=mask+autoencoder&ie=UTF-8&oe=UTF-8) to learn earth representation. 
+     This modelling framework is interesting in my opinion. And also, it is suitable for the EO cases and my goals
 
 Project Organization
 ------------
