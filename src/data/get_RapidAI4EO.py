@@ -163,6 +163,7 @@ class RapidAI4EO(AcquireData):
         input_dims: x and y sizes of the images
         input_overlap : default is 0 for x and y dims (there is no overlap, stride = input dims)
         batch_size (int): batch size
+        select_bands: select the desired band of the planet data e.g., [1, 2, 4] or [1, 2, 3]
         Returns: datapipe
         -------
 
