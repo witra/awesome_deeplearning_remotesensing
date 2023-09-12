@@ -9,22 +9,19 @@ import torch.nn
 import torch.nn as nn
 import wandb
 from torch.utils.tensorboard import SummaryWriter
-from pathlib import Path
+
 from keys import wandb_props
+from src import utils
 from src.data.get_RapidAI4EO import RapidAI4EO
 from src.models.mae.models_mae import MaskedAutoencoderViT
-from src import utils
 
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Basic MAE trainer')
-    parser.add_argument('config_file', type=str, help="""
-    path to the config file
-    
-    """)
+    parser.add_argument('config_file', type=str, help="""path to the config file""")
     parser.add_argument('--verbose', default=True, type=bool, help='print some statements')
-
     return parser
+
 
 def main(args):
     device = torch.device('mps') if torch.backends.mps.is_available() else torch.device('cpu')
@@ -106,7 +103,7 @@ def main(args):
         scheduler.step()
 
         # Track the best performance, and save the model's state
-        if batch_loss.item()/data_iter_step < best_loss:
+        if batch_loss.item() / data_iter_step < best_loss:
             print('save the model')
             best_loss = batch_loss.item()
             model_path = os.path.join(args.output_dir, args.model_name)
@@ -122,9 +119,10 @@ if __name__ == '__main__':
     """
     args = get_args_parser()
     args = args.parse_args()
-    if args.config_file:
-        config_path = args.config_file
-        config_data = utils.parse_config(config_path)
-        config_merge = utils.merge_config_with_parse(config_data, args)
-        args = argparse.Namespace(**config_merge)
+
+    config_path = args.config_file
+    config_data = utils.parse_config(config_path)
+    config_merge = utils.merge_config_with_parse(config_data, args)
+    args = argparse.Namespace(**config_merge)
+
     main(args)
