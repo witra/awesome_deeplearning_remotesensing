@@ -1,0 +1,22 @@
+# Configuration for the my mae
+# location in Berlin
+
+output_dir: '../../../models/my_mae'
+planet_geomatry_path: "./rapidai4eo_geometries.geojson.gz"
+model_name: 'model_test_mae.pt'
+batch_size: 32
+init_best_loss: 1_000_000
+x_overlap: 32
+y_overlap: 32
+x_input_dims: 64
+y_input_dims: 64
+attention_depth: 2
+decoder_depth: 8
+lr: 0.1
+
+lat_n: 52.69
+lat_s: 52.35
+lon_e: 13.72
+lon_w: 13.05
+start_date: '2018-01-01T00:00:00Z'
+end_date: '2019-01-01T00:00:00Z'
