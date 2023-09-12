@@ -1,4 +1,5 @@
 import requests
+import yaml
 from tqdm import tqdm
 
 
@@ -15,3 +16,27 @@ def download_file(url, output_path):
             print(f"Downloaded {url} to {output_path}")
     else:
         print(f"failed to download {url}. Status code: {r.status_code}")
+
+
+def parse_config(config_file):
+    """
+    Yaml only config parsing
+    Parameters
+    ----------
+    config_file :
+
+    Returns
+    -------
+
+    """
+    try:
+        with open(config_file, 'r') as file:
+            config_data = yaml.safe_load(file)
+        return config_data
+    except FileNotFoundError:
+        return {}
+
+
+def merge_config_with_parse(config, args):
+    config.update({k: v for k, v in vars(args).items() if v is not None})
+    return config
