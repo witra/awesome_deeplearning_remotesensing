@@ -1,0 +1,5 @@
+outs:
+- md5: d518a20c7fa478f6872bc9e6db1e212c
+  size: 102146157
+  hash: md5
+  path: model_test_mae.pt
