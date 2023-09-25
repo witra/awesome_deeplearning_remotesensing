@@ -10,7 +10,7 @@ from torchdata.datapipes.iter import IterDataPipe
 @functional_datapipe("filter_rioxarray")
 class FilterRioXarrayIterDataPipe(IterDataPipe):
     """
-    Filter/select the dimension of the rx.DataArray
+    Filter/select the dimension of the xr.DataArray
     """
     def __init__(self, source_dp:IterDataPipe, label:str, selected_list: List) -> None:
         super().__init__()
