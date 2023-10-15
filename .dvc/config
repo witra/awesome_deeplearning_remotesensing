@@ -1,0 +1,4 @@
+[core]
+    remote = ssl_rs_remote
+['remote "ssl_rs_remote"']
+    url = gdrive://163LTqxmxKqE8ZYLA06oFME2hb_KvPeoh
